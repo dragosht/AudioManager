@@ -95,7 +95,18 @@ OPTION ( WITH_NSM
  OPTION ( WITH_DATABASE_STORAGE
     "build with sqlite as in memory storage" OFF)
 
+OPTION( WITH_PULSE_ROUTING_PLUGIN
+    "Enable PULSE Audio routing plugin interface" OFF )
+
+OPTION( WITH_PULSE_CONTROL_PLUGIN
+    "Enable PULSE Audio control plugin interface" OFF)
+
 SET (WITH_COMMON_API_GEN ON CACHE INTERNAL "hide this!" FORCE)
+
+IF (WITH_PULSE_ROUTING_PLUGIN)
+    SET (WITH_DBUS_WRAPPER ON CACHE INTERNAL "hide this!" FORCE)
+    SET (WITH_CAPI_WRAPPER OFF CACHE INTERNAL "hide this!" FORCE)
+ENDIF (WITH_PULSE_ROUTING_PLUGIN)
  
 IF (WITH_ENABLED_IPC STREQUAL "DBUS")
     SET (WITH_DBUS_WRAPPER ON CACHE INTERNAL "hide this!" FORCE)
@@ -239,16 +250,24 @@ if(WITH_PLUGIN_COMMAND)
 endif(WITH_PLUGIN_COMMAND)
 
 if(WITH_PLUGIN_ROUTING)
-	add_subdirectory (PluginRoutingInterfaceAsync)
-    if(WITH_DBUS_WRAPPER)
-	    add_subdirectory (PluginRoutingInterfaceDbus)
-	elseif(WITH_CAPI_WRAPPER)  	    
-    	add_subdirectory (PluginRoutingInterfaceCAPI)    
-	endif()    
+    if (WITH_PULSE_ROUTING_PLUGIN)
+        add_subdirectory (PluginRoutingInterfacePulse)
+    else ()
+        add_subdirectory (PluginRoutingInterfaceAsync)
+        if(WITH_DBUS_WRAPPER)
+            add_subdirectory (PluginRoutingInterfaceDbus)
+        elseif(WITH_CAPI_WRAPPER)
+            add_subdirectory (PluginRoutingInterfaceCAPI)
+        endif()
+    endif()
 endif(WITH_PLUGIN_ROUTING)
 
 if(WITH_PLUGIN_CONTROL)
-	add_subdirectory (PluginControlInterface)
+    if(WITH_PULSE_CONTROL_PLUGIN)
+        add_subdirectory (PluginControlInterfacePulse)
+    else ()
+        add_subdirectory (PluginControlInterface)
+    endif(WITH_PULSE_CONTROL_PLUGIN)
 endif(WITH_PLUGIN_CONTROL)
 
 add_subdirectory (AudioManagerDaemon)
